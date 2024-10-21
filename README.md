@@ -9,13 +9,6 @@ An interactive Tkinter application for annotating video frames with labels and t
 - Save the annotations in a JSON file.
 - Resume annotating by appending to an existing JSON file.
 
-## Requirements
-
-- Python 3.6+
-- OpenCV
-- Tkinter
-- PIL (Pillow)
-
 ## Setup Instructions
 
 ### 1. Clone the repository
