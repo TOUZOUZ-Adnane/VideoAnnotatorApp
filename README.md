@@ -101,4 +101,3 @@ The annotations for the video are saved in a JSON file with the following struct
 For any inquiries or further information, feel free to contact me via:
 - [LinkedIn](https://www.linkedin.com/in/adnane-touzouz/)
 - [Email](mailto:adnane.touzouz.ta@gmail.com)
-- [Portfolio](https://touzouz-adnane.github.io/TOUZOUZ-Adnane/)
