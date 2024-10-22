@@ -47,7 +47,7 @@ pip install -r requirements.txt
 To start the Video Annotator application, ensure your virtual environment is activated, then run the following command:
 
 ```bash
-python app.py
+python tkinter_main.py
 ```
 
 ### 5. Using the Application
