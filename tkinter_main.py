@@ -10,36 +10,37 @@ class VideoAnnotatorApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Video Annotator")
-        self.root.geometry("900x600")
+
+        # Set the window to maximized mode (not fullscreen)
+        self.root.state("zoomed")
 
         # Video panel
         self.video_panel = tk.Label(self.root)
-        self.video_panel.pack()
+        self.video_panel.pack(expand=True, fill=tk.BOTH)
 
         # Controls and input fields for play/pause, forward, backward, annotate, and save
         control_frame = tk.Frame(self.root)
         control_frame.pack(pady=10)
 
+        self.backward_button = tk.Button(control_frame, text="Backward 10 Frames", command=self.backward)
+        self.backward_button.grid(row=0, column=0, padx=5)
+
         self.play_button = tk.Button(control_frame, text="Play/Pause", command=self.play_pause)
-        self.play_button.grid(row=0, column=0, padx=5)
+        self.play_button.grid(row=0, column=1, padx=5)
 
         self.forward_button = tk.Button(control_frame, text="Forward 10 Frames", command=self.forward)
-        self.forward_button.grid(row=0, column=1, padx=5)
+        self.forward_button.grid(row=0, column=2, padx=5)
 
-        self.backward_button = tk.Button(control_frame, text="Backward 10 Frames", command=self.backward)
-        self.backward_button.grid(row=0, column=2, padx=5)
+        tk.Label(control_frame, text="Label:").grid(row=0, column=3, padx=5)
+        self.label_input = tk.Entry(control_frame, width=15)
+        self.label_input.grid(row=0, column=4, padx=5)
+
+        tk.Label(control_frame, text="Team:").grid(row=0, column=5, padx=5)
+        self.team_input = tk.Entry(control_frame, width=15)
+        self.team_input.grid(row=0, column=6, padx=5)
 
         self.annotate_button = tk.Button(control_frame, text="Annotate Frame", command=self.annotate_frame)
-        self.annotate_button.grid(row=0, column=3, padx=5)
-
-        # Label and Team input fields
-        tk.Label(control_frame, text="Label:").grid(row=0, column=4, padx=5)
-        self.label_input = tk.Entry(control_frame, width=15)
-        self.label_input.grid(row=0, column=5, padx=5)
-
-        tk.Label(control_frame, text="Team:").grid(row=0, column=6, padx=5)
-        self.team_input = tk.Entry(control_frame, width=15)
-        self.team_input.grid(row=0, column=7, padx=5)
+        self.annotate_button.grid(row=0, column=7, padx=5)
 
         # Open video file dialog
         self.video_path = filedialog.askopenfilename(title="Select Video", filetypes=[("Video files", "*.mp4 *.mkv")])
@@ -56,13 +57,16 @@ class VideoAnnotatorApp:
 
         # Create a directory for annotations
         self.annotation_folder = os.path.join(self.video_dir, self.url_local)
-        os.makedirs(self.annotation_folder, exist_ok=True)
 
-        # Start displaying video
+        # Start displaying the first frame immediately after loading the video
         self.update_video_frame()
+        self.play_pause()  # Automatically start playing after the video loads
+
+        # Set focus to the label input field initially
+        self.label_input.focus_set()
 
     def update_video_frame(self):
-        if self.is_playing:
+        if self.is_playing or self.current_frame == 0:  # Ensure the first frame is displayed
             ret, frame = self.cap.read()
             if ret:
                 self.current_frame = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
@@ -136,7 +140,7 @@ class VideoAnnotatorApp:
         self.save_annotations()
 
     def save_annotations(self):
-        # Define the JSON file path
+        # Define the JSON file path (stored next to the video, without a new folder)
         json_file_path = os.path.join(self.video_dir, f"{self.url_local}_annotations.json")
 
         # Prepare the data to save
@@ -162,6 +166,7 @@ class VideoAnnotatorApp:
 
         # Clear the annotations list after saving
         self.annotations.clear()
+
 
 
 if __name__ == "__main__":
