@@ -55,15 +55,30 @@ class VideoAnnotatorApp:
         self.video_dir = os.path.dirname(self.video_path)  # Directory of the video
         self.url_local = os.path.splitext(os.path.basename(self.video_path))[0]  # Extracting filename as URL local
 
-        # Create a directory for annotations
-        self.annotation_folder = os.path.join(self.video_dir, self.url_local)
+        # Path to JSON file
+        self.annotation_file_path = os.path.join(self.video_dir, f"{self.url_local}_annotations.json")
 
-        # Start displaying the first frame immediately after loading the video
+        # Check if JSON file exists and set the starting frame
+        self.set_starting_frame()
+
+        # Start displaying the first frame from the desired starting frame
         self.update_video_frame()
         self.play_pause()  # Automatically start playing after the video loads
 
         # Set focus to the label input field initially
         self.label_input.focus_set()
+
+    def set_starting_frame(self):
+        """Set the starting frame based on the last event in the JSON file if it exists."""
+        if os.path.exists(self.annotation_file_path):
+            with open(self.annotation_file_path, 'r') as json_file:
+                data = json.load(json_file)
+                if data["annotations"]:
+                    last_annotation = data["annotations"][-1]
+                    self.current_frame = int(last_annotation["position"])
+                    self.cap.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame)
+        else:
+            self.current_frame = 0  # Start from the beginning if no JSON file
 
     def update_video_frame(self):
         if self.is_playing or self.current_frame == 0:  # Ensure the first frame is displayed
@@ -140,9 +155,6 @@ class VideoAnnotatorApp:
         self.save_annotations()
 
     def save_annotations(self):
-        # Define the JSON file path (stored next to the video, without a new folder)
-        json_file_path = os.path.join(self.video_dir, f"{self.url_local}_annotations.json")
-
         # Prepare the data to save
         data = {
             "UrlLocal": self.url_local,
@@ -151,9 +163,9 @@ class VideoAnnotatorApp:
         }
 
         # Check if the JSON file already exists
-        if os.path.exists(json_file_path):
+        if os.path.exists(self.annotation_file_path):
             # If it exists, load the existing annotations
-            with open(json_file_path, 'r') as json_file:
+            with open(self.annotation_file_path, 'r') as json_file:
                 existing_data = json.load(json_file)
                 data["annotations"] = existing_data["annotations"]
 
@@ -161,12 +173,11 @@ class VideoAnnotatorApp:
         data["annotations"].extend(self.annotations)
 
         # Save annotations to the JSON file
-        with open(json_file_path, 'w') as json_file:
+        with open(self.annotation_file_path, 'w') as json_file:
             json.dump(data, json_file, indent=4)
 
         # Clear the annotations list after saving
         self.annotations.clear()
-
 
 
 if __name__ == "__main__":
