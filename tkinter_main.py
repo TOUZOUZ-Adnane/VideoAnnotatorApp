@@ -14,6 +14,12 @@ class VideoAnnotatorApp:
         # Set the window to maximized mode (not fullscreen)
         self.root.state("zoomed")
 
+        # Get the screen width and height, then set the target width and height to be 75% of these values
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        self.target_width = int(screen_width * 0.75)
+        self.target_height = int(screen_height * 0.75)
+
         # Video panel
         self.video_panel = tk.Label(self.root)
         self.video_panel.pack(expand=True, fill=tk.BOTH)
@@ -88,6 +94,9 @@ class VideoAnnotatorApp:
 
                 # Convert frame to ImageTk format
                 cv2_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+                # Resize the frame to 75% of the screen dimensions
+                cv2_image = cv2.resize(cv2_image, (self.target_width, self.target_height))
 
                 # Display annotations on the video frame if they exist
                 for annotation in self.annotations:
