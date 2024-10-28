@@ -28,28 +28,34 @@ class VideoAnnotatorApp:
         control_frame = tk.Frame(self.root)
         control_frame.pack(pady=10)
 
-        self.backward_button = tk.Button(control_frame, text="Backward 10 Frames", command=self.backward)
+        self.backward_button = tk.Button(control_frame, text="<<", command=self.backward_10)
         self.backward_button.grid(row=0, column=0, padx=5)
 
+        self.backward_1_button = tk.Button(control_frame, text="<", command=self.backward_1)
+        self.backward_1_button.grid(row=0, column=1, padx=5)
+
         self.play_button = tk.Button(control_frame, text="Play/Pause", command=self.play_pause)
-        self.play_button.grid(row=0, column=1, padx=5)
+        self.play_button.grid(row=0, column=2, padx=5)
 
-        self.forward_button = tk.Button(control_frame, text="Forward 10 Frames", command=self.forward)
-        self.forward_button.grid(row=0, column=2, padx=5)
+        self.forward_1_button = tk.Button(control_frame, text=">", command=self.forward_1)
+        self.forward_1_button.grid(row=0, column=3, padx=5)
 
-        tk.Label(control_frame, text="Label:").grid(row=0, column=3, padx=5)
+        self.forward_button = tk.Button(control_frame, text=">>", command=self.forward_10)
+        self.forward_button.grid(row=0, column=4, padx=5)
+
+        tk.Label(control_frame, text="Label:").grid(row=0, column=5, padx=5)
         self.label_input = tk.Entry(control_frame, width=15)
-        self.label_input.grid(row=0, column=4, padx=5)
+        self.label_input.grid(row=0, column=6, padx=5)
 
-        tk.Label(control_frame, text="Team:").grid(row=0, column=5, padx=5)
+        tk.Label(control_frame, text="Team:").grid(row=0, column=7, padx=5)
         self.team_input = tk.Entry(control_frame, width=15)
-        self.team_input.grid(row=0, column=6, padx=5)
+        self.team_input.grid(row=0, column=8, padx=5)
 
         self.annotate_button = tk.Button(control_frame, text="Annotate Frame", command=self.annotate_frame)
-        self.annotate_button.grid(row=0, column=7, padx=5)
+        self.annotate_button.grid(row=0, column=9, padx=5)
 
         # Open video file dialog
-        self.video_path = filedialog.askopenfilename(title="Select Video", filetypes=[("Video files", "*.mp4 *.mkv")])
+        self.video_path = filedialog.askopenfilename(title="Select Video", filetypes=[("Video files", "*.mp4 *.mkv *.mov")])
         self.cap = cv2.VideoCapture(self.video_path)
 
         # Video information
@@ -88,48 +94,59 @@ class VideoAnnotatorApp:
 
     def update_video_frame(self):
         if self.is_playing or self.current_frame == 0:  # Ensure the first frame is displayed
-            ret, frame = self.cap.read()
-            if ret:
-                self.current_frame = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
-
-                # Convert frame to ImageTk format
-                cv2_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
-                # Resize the frame to 75% of the screen dimensions
-                cv2_image = cv2.resize(cv2_image, (self.target_width, self.target_height))
-
-                # Display annotations on the video frame if they exist
-                for annotation in self.annotations:
-                    if annotation["position"] == self.current_frame:
-                        # Draw annotation text on the frame
-                        cv2.putText(cv2_image, f"{annotation['label']} - {annotation['team']}",
-                                    (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-                img = Image.fromarray(cv2_image)
-                imgtk = ImageTk.PhotoImage(image=img)
-                self.video_panel.imgtk = imgtk
-                self.video_panel.config(image=imgtk)
-            else:
-                self.is_playing = False
-                self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)  # Restart video if it reaches the end
+            self.show_current_frame()
 
         # Call this method again to keep updating the frames
         self.root.after(30, self.update_video_frame)
 
+    def show_current_frame(self):
+        """Display the current frame immediately on the video panel."""
+        ret, frame = self.cap.read()
+        if ret:
+            self.current_frame = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
+            cv2_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            cv2_image = cv2.resize(cv2_image, (self.target_width, self.target_height))
+
+            for annotation in self.annotations:
+                if annotation["position"] == self.current_frame:
+                    cv2.putText(cv2_image, f"{annotation['label']} - {annotation['team']}",
+                                (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+            img = Image.fromarray(cv2_image)
+            imgtk = ImageTk.PhotoImage(image=img)
+            self.video_panel.imgtk = imgtk
+            self.video_panel.config(image=imgtk)
+
     def play_pause(self):
         self.is_playing = not self.is_playing
 
-    def forward(self):
-        new_frame = self.current_frame + 10
+    def forward_10(self):
+        new_frame = self.current_frame + int(self.fps)
         if new_frame < self.frame_count:
             self.cap.set(cv2.CAP_PROP_POS_FRAMES, new_frame)
             self.current_frame = new_frame
+            self.show_current_frame()  # Show frame immediately after moving forward
 
-    def backward(self):
-        new_frame = self.current_frame - 10
+    def forward_1(self):
+        new_frame = self.current_frame + 1
+        if new_frame < self.frame_count:
+            self.cap.set(cv2.CAP_PROP_POS_FRAMES, new_frame)
+            self.current_frame = new_frame
+            self.show_current_frame()  # Show frame immediately after moving forward
+
+    def backward_10(self):
+        new_frame = self.current_frame - int(self.fps)
         if new_frame >= 0:
             self.cap.set(cv2.CAP_PROP_POS_FRAMES, new_frame)
             self.current_frame = new_frame
+            self.show_current_frame()  # Show frame immediately after moving backward
+
+    def backward_1(self):
+        new_frame = self.current_frame - 3
+        if new_frame >= 0:
+            self.cap.set(cv2.CAP_PROP_POS_FRAMES, new_frame)
+            self.current_frame = new_frame
+            self.show_current_frame()  # Show frame immediately after moving backward
 
     def annotate_frame(self):
         # Get the current game time in MM:SS format
